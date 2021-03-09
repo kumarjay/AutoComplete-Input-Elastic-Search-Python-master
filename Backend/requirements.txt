@@ -1,0 +1,6 @@
+Cython==0.29.21
+elasticsearch==7.11.0
+Flask==1.1.2
+Flask-RESTful==0.3.8
+# pandas==0.19.1
+requests

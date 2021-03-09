@@ -1,0 +1,64 @@
+version: "3.2"
+services:
+  elasticsearch:
+    build:
+      context: elasticsearch/
+      args:
+        ELK_VERSION: "7.7.0"
+    container_name: "elasticsearch"
+    volumes:
+      - type: bind
+        source: ./elasticsearch/config/elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        read_only: true
+      - type: volume
+        source: elasticsearch
+        target: /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ELASTIC_PASSWORD: changeme
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
+      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
+
+
+  backend:
+    build: ./Backend
+    container_name: "backend"
+    # command: python api.py runserver 127.0.0.1:4000
+    ports:
+      - "4000:4000"
+
+    depends_on:
+      - elasticsearch
+
+  frontend:
+    build: ./Frontend
+    container_name: "frontend"
+    ports:
+      - "5000:5000"
+
+    depends_on:
+      - elasticsearch
+      - backend
+  kibana:
+    build:
+      context: kibana/
+      args:
+        ELK_VERSION: "7.7.0"
+    volumes:
+      - type: bind
+        source: ./kibana/config/kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
+    ports:
+      - "5601:5601"
+
+    depends_on:
+      - elasticsearch
+
+volumes:
+  elasticsearch:

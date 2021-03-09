@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+
+    <title></title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="http://jqueryui.com/resources/demos/style.css">>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<body>
+
+<div style="height: 55vh;" class="jumbotron ui-widget">
+    <h4 style="text-align: center;padding: 20px;">Search as you Type with Elastic Search</h4>
+    <div style="position:absolute; left: 40%;top: 30%">
+        <input id="source" />
+        <div id="result"></div>
+        <a onclick="btn_submit()" style="position: absolute; top: 0%;left: 120%" class="btn btn-primary">Submit</a>
+    </div>
+
+</div>
+<div id="experiment"></div>
+
+<script>
+    const $source = document.querySelector('#source');
+    const $result = document.querySelector('#result');
+    const $experiment= document.querySelector('#experiment')
+
+    const typeHandler = function(e) {
+        $result.innerHTML = e.target.value;
+        console.log(e.target.value);
+
+        $.ajax({
+            url: "/pipe",
+            type : 'POST',
+            cache: false,
+            data:{'data': e.target.value},
+            success: function(html)
+            {
+                console.log(html)
+                var data = html.aggregations.auto_complete.buckets
+                var text= html.hits.hits
+                var _ = []
+                var test= []
+                var trHTML = '<table class="table"><tr><th> Year </th><th> Title</th><th>Director</th><th>Genere</th><th>Production Company</th><th>Actors</th></tr></table>';
+
+                $.each(data, (index, value)=>{
+                    _.push(value.key)
+                });
+                $.each(text, (index, value)=>{
+                    test.push(value._source.Outlet_Type)
+
+                    trHTML += '<table class="table"><tr><td style="word-wrap: break-word;min-width: 20px;max-width: 30px;">'+ value._source.year +'</td><td style="word-wrap: break-word;min-width: 80px;max-width: 80px;">'+ value._source.title +'</td><td style="word-wrap: break-word;min-width: 90px;max-width: 90px;">'+ value._source.director +'</td><td style="word-wrap: break-word;min-width: 50px;max-width: 50px;">'+ value._source.genre + '</td><td style="word-wrap: break-word;min-width: 130px;max-width: 130px;">'+ value._source.production_company + '</td><td style="word-wrap: break-word;min-width: 160px;max-width: 160px;">'+ value._source.actors + '</td></tr></table>';
+                });
+                console.log(_)
+                console.log(test)
+                $( "#source" ).autocomplete({
+                    source: _
+                });
+
+                $('#experiment').html(trHTML)
+
+            }
+        });
+    }
+
+    $source.addEventListener('input', typeHandler) // register for oninput
+    $experiment.addEventListener('input', typeHandler)
+    $source.addEventListener('propertychange', typeHandler) // for IE8
+
+    function btn_submit()
+    {
+        sessionStorage.setItem('Outlet_Type', $("#source").val() )
+    }
+
+
+    $( document ).ready(function() {
+
+        var data = sessionStorage.getItem('Outlet_Type')
+        $("#source").val(data);
+    });
+
+
+
+</script>
+</body>
+</html>

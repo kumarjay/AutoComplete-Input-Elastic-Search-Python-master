@@ -1,0 +1,5 @@
+elasticsearch==7.11.0
+Flask==1.1.2
+Flask-RESTful==0.3.8
+pandas==1.1.5
+requests
